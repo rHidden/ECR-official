@@ -1,5 +1,10 @@
 # The implementation for the Recsys 2024 paper: Towards Empathetic Conversational Recommender System
 
+> **About this copy:** this is the official code from [zxd-octopus/ECR](https://github.com/zxd-octopus/ECR) by the
+> paper's authors (Zhang et al., RecSys 2024), used for a study of how random seeds affect ECR's results. Their
+> code is unchanged; we only added setup files. The upstream repository has no license file, so all rights stay
+> with the original authors. **Environment setup, data download and seed notes: [SETUP.md](SETUP.md).**
+
 ## Requirements
 
 - python == 3.8.13
