@@ -2,7 +2,8 @@
 
 This repo is the official code of *Towards Empathetic Conversational Recommender Systems* (Zhang et al.,
 RecSys 2024) from [zxd-octopus/ECR](https://github.com/zxd-octopus/ECR) at commit `26e2342`, plus these setup files:
-`requirements.txt`, `setup_env.sh`, `download_data.sh`, `check_env.py` and this guide.
+`requirements.txt`, `setup_env.sh`, `fetch_backbones.sh`, `download_data.sh`, `check_env.py`, the unofficial
+`setup_env_mac.sh`, and this guide.
 The authors' code (`src_emo/`, `imdb_review_crawl.py`) is unchanged.
 
 ## What you need
@@ -28,13 +29,42 @@ python check_env.py        # versions, GPU test, folders
 
 Then follow the Quick-Start in [README.md](README.md), starting with `cd src_emo`.
 
+## Unofficial: macOS (Apple Silicon), CPU only
+
+For evaluating the released checkpoints, preprocessing data and debugging on a laptop. Not for training or for
+numbers you report: it uses PyTorch 2.4 on the CPU instead of 1.8.1 on CUDA, so results can differ slightly.
+
+```bash
+bash setup_env_mac.sh       # .venv/ with Python 3.9 (macOS ships it as /usr/bin/python3)
+source .venv/bin/activate
+bash download_data.sh
+```
+
+What it changes, without editing the authors' code:
+
+- **tokenizers 0.11.6** instead of 0.10.3, the oldest version with an Apple Silicon build. transformers 4.15's version
+  check is relaxed to accept it. The tokens for DialoGPT and RoBERTa are identical.
+- **A `sitecustomize.py` shim** in the environment:
+  - It maps `torch.set_deterministic` (removed after PyTorch 1.8) to `torch.use_deterministic_algorithms`.
+  - Without a GPU, it makes `.cuda()` a no-op, because `dataset_dbpedia.py` hard-codes `.cuda()` for the knowledge-graph edges.
+- **accelerate 0.8** has no Apple-GPU (MPS) support, so everything runs on the CPU.
+
 ## Notes and assumptions
 
 - **Backbones.** The scripts load DialoGPT and RoBERTa from `src_emo/save/dialogpt/` and `src_emo/save/roberta/`,
-  which the authors don't ship or document. `setup_env.sh` fills them with `microsoft/DialoGPT-small` and
-  `roberta-base`, the models used by UniCRS, which ECR builds on. If `ckpt.zip` turns out to contain different
-  backbones, use those.
+  which the authors don't ship or document. `fetch_backbones.sh` (run by both setup scripts) fills them with
+  `microsoft/DialoGPT-small` and `roberta-base`, the models used by UniCRS, which ECR builds on. `ckpt.zip` holds
+  no backbones, but its generator config (12 layers, 768 dims, 50,257 + 2 tokens) confirms DialoGPT-small.
+  The files are downloaded directly, because transformers 4.15 can no longer follow the Hub's redirects.
+- **Google Drive downloads** need gdown 5.x. Older versions fail on large files with "Access denied".
 - **wandb** is off unless you pass `--use_wandb`.
+- **Don't overwrite the released model.** `train_rec.py` saves to `--output_dir`, which defaults to
+  `data/saved/rec`, the folder holding the authors' released checkpoint. Always pass your own `--output_dir`.
+- **Evaluate without training:** add `--test --prompt_encoder data/saved/rec/` to the README's full `train_rec.py`
+  command. It scores the saved prompt encoder on the validation and test sets and trains nothing. Keep
+  `--num_warmup_steps` in the command: the learning-rate scheduler is built even in test mode and crashes without it.
+- **Downloads:** `emo_data.zip` is 111 MB and `ckpt.zip` 679 MB. Following the README's copy steps, the data
+  takes about 2.5 GB on disk, and the two backbones another 0.75 GB.
 - **Package versions.** The authors pinned Python, PyTorch, CUDA, transformers, accelerate and PyG. All other
   versions in `requirements.txt` are our choice of releases from the same period.
 
@@ -43,7 +73,7 @@ Then follow the Quick-Start in [README.md](README.md), starting with `cd src_emo
 | Script | README seed | How it seeds |
 |---|---|---|
 | `train_pre.py` (pre-training) | 42 | Only with `--use_new_seed` does it call `seed_torch()` (Python, NumPy, torch, cuDNN disabled). Without it (the README command) it calls accelerate's `set_seed()` and sets `cudnn.benchmark = False`, but not `cudnn.deterministic`, so GPU runs may not repeat exactly. |
-| `train_rec.py` (recommendation) | 8 | Always `seed_torch()`: fully seeded, cuDNN disabled. |
+| `train_rec.py` (recommendation) | 8 | Always `seed_torch()`: Python, NumPy and torch seeded, cuDNN disabled, and `torch.set_deterministic(True)` (PyTorch errors on any non-deterministic operation). |
 | `train_emp.py`, `infer_emp.py` (generation) | default 42 | accelerate's `set_seed()` only. |
 
 For seed experiments:

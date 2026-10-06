@@ -236,3 +236,11 @@ cython_debug/
 
 # Local History for Visual Studio Code
 .history/
+
+### ECR data, checkpoints and backbones (downloaded or generated, ~3 GB; see SETUP.md).
+# The authors' scripts in these folders stay tracked: ignore rules don't apply to tracked files.
+src_emo/data/emo_data/*
+src_emo/data/saved/*
+src_emo/data/redial/*
+src_emo/data/redial_gen/*
+src_emo/save/*

@@ -22,22 +22,8 @@ echo "using $PY"
 "$PY" -m pip install torch-scatter==2.0.8 torch-sparse==0.6.12 -f https://data.pyg.org/whl/torch-1.8.0+cu111.html
 "$PY" -m pip install -r requirements.txt
 
-# The training scripts load the backbones from src_emo/save/dialogpt/ and src_emo/save/roberta/, which the
-# repo does not ship or document. ECR builds on UniCRS, which uses microsoft/DialoGPT-small and roberta-base,
-# so fetch those (skipped if the folders already exist, e.g. from ckpt.zip).
-"$PY" - <<'EOF'
-import os
-from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer
-
-for name, folder, model_cls in [("microsoft/DialoGPT-small", "src_emo/save/dialogpt", AutoModelForCausalLM),
-                                ("roberta-base", "src_emo/save/roberta", AutoModel)]:
-    if os.path.isdir(folder) and os.listdir(folder):
-        print(f"{folder} exists, skipping")
-        continue
-    AutoTokenizer.from_pretrained(name).save_pretrained(folder)
-    model_cls.from_pretrained(name).save_pretrained(folder)
-    print(f"{name} -> {folder}")
-EOF
+# DialoGPT-small and RoBERTa-base backbones into src_emo/save/ (see fetch_backbones.sh)
+bash fetch_backbones.sh
 
 echo
 echo "Environment '$ENV_NAME' is ready. Next:"

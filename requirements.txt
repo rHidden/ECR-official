@@ -17,7 +17,7 @@ loguru==0.6.0
 tqdm==4.64.1
 wandb==0.13.10
 requests==2.28.2
-gdown==4.7.1
+gdown==5.2.0  # 4.x can no longer download large files from Google Drive
 
 # only needed for imdb_review_crawl.py
 beautifulsoup4==4.11.1
