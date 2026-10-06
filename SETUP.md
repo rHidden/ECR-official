@@ -49,6 +49,13 @@ What it changes, without editing the authors' code:
   - Without a GPU, it makes `.cuda()` a no-op, because `dataset_dbpedia.py` hard-codes `.cuda()` for the knowledge-graph edges.
 - **accelerate 0.8** has no Apple-GPU (MPS) support, so everything runs on the CPU.
 
+**It uses every CPU core and makes the laptop hard to use.** Evaluating the released recommender (`--test`) takes
+about 15 minutes at full load on an M4 Pro. To keep the machine usable, run it throttled, which is slower:
+
+```bash
+OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nice -n 19 python train_rec.py ...
+```
+
 ## Notes and assumptions
 
 - **Backbones.** The scripts load DialoGPT and RoBERTa from `src_emo/save/dialogpt/` and `src_emo/save/roberta/`,
