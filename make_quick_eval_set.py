@@ -11,6 +11,12 @@
     After you are finished creating this smaller data chunk and training just certain percentage of train data, navigate to src_emo (cd src_emo)
     Then you will be able to run something like: (feel free to adjust epochs and/or other parameters)
     OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 nice -n 19 ../.venv/bin/python train_rec.py --dataset redial_gen_quick --n_prefix_rec 10 --num_train_epochs 1 --per_device_train_batch_size 16 --per_device_eval_batch_size 32 --gradient_accumulation_steps 8 --num_warmup_steps 1 --context_max_length 200 --prompt_max_length 200 --entity_max_length 32 --learning_rate 1e-4 --seed 1 --like_score 2.0 --dislike_score 1.0 --notsay_score 0.5 --weighted_loss --nei_mer --use_sentiment --output_dir save/train_seed1 2>&1 | tee save/train_seed1.log
+
+    Go back to the original folder (ECR-official) (cd ..)
+    Run python3 collect_results.py - collects results from the logs (custom built)
+
+    logs can be found in save/train_seed1.log
+    clear(er) results can be found in results.csv / md
 """
 
 import argparse

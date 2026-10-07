@@ -65,8 +65,10 @@ OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nice -n 19 python train_rec.py ...
   The files are downloaded directly, because transformers 4.15 can no longer follow the Hub's redirects.
 - **Google Drive downloads** need gdown 5.x. Older versions fail on large files with "Access denied".
 - **wandb** is off unless you pass `--use_wandb`.
-- **Don't overwrite the released model.** `train_rec.py` saves to `--output_dir`, which defaults to
-  `data/saved/rec`, the folder holding the authors' released checkpoint. Always pass your own `--output_dir`.
+- **Where trained models go.** `train_rec.py` appends a timestamp to `--output_dir` with no separator
+  (`save/run1` becomes `save/run12026-10-07-05-27-49/`), with `best/` and `final/` inside. End the path with a
+  slash (`--output_dir save/run1/`) to get one folder per run. The default, `data/saved/rec`, gets a timestamp too,
+  so it doesn't overwrite the authors' released checkpoint, but it does clutter that folder.
 - **Evaluate without training:** add `--test --prompt_encoder data/saved/rec/` to the README's full `train_rec.py`
   command. It scores the saved prompt encoder on the validation and test sets and trains nothing. Keep
   `--num_warmup_steps` in the command: the learning-rate scheduler is built even in test mode and crashes without it.
