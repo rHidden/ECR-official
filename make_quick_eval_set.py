@@ -1,9 +1,9 @@
 """Built so that we can test on a subset of the real data that takes a fraction of the time to run
-    created dataset is saved in gitignored files redial_gen_quick
+    created dataset is saved in gitignored files redial_gen_quick under src_emo/data
 
-    python make_quick_eval_set.py --percent 10          # random 10% of the validation and test sets
-    python make_quick_eval_set.py                       # ~1000 test and ~160 validation recommendations
-    python make_quick_eval_set.py --test-targets 500    # smaller and faster
+    python3 make_quick_eval_set.py --percent 10          # random 10% of the validation and test sets
+    python3 make_quick_eval_set.py                       # ~1000 test and ~160 validation recommendations
+    python3 make_quick_eval_set.py --test-targets 500    # smaller and faster
 """
 
 import argparse
