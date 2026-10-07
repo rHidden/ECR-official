@@ -1,9 +1,16 @@
 """Built so that we can test on a subset of the real data that takes a fraction of the time to run
     created dataset is saved in gitignored files redial_gen_quick under src_emo/data
 
-    python3 make_quick_eval_set.py --percent 10          # random 10% of the validation and test sets
-    python3 make_quick_eval_set.py                       # ~1000 test and ~160 validation recommendations
-    python3 make_quick_eval_set.py --test-targets 500    # smaller and faster
+    python3 make_quick_eval_set.py --percent 10                     # random 10% of the validation and test sets
+    python3 make_quick_eval_set.py --percent 10 --train-percent 5   # ...plus 5% of the training set, to train on
+    python3 make_quick_eval_set.py --percent 5                      # random 5% of the validation and test sets
+    python3 make_quick_eval_set.py --percent 5 --train-percent 1    # ...plus 1% of the training set, to train on
+    python3 make_quick_eval_set.py                                  # ~1000 test and ~160 validation recommendations
+    python3 make_quick_eval_set.py --test-targets 500               # smaller and faster
+
+    After you are finished creating this smaller data chunk and training just certain percentage of train data, navigate to src_emo (cd src_emo)
+    Then you will be able to run something like: (feel free to adjust epochs and/or other parameters)
+    OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 nice -n 19 ../.venv/bin/python train_rec.py --dataset redial_gen_quick --n_prefix_rec 10 --num_train_epochs 1 --per_device_train_batch_size 16 --per_device_eval_batch_size 32 --gradient_accumulation_steps 8 --num_warmup_steps 1 --context_max_length 200 --prompt_max_length 200 --entity_max_length 32 --learning_rate 1e-4 --seed 1 --like_score 2.0 --dislike_score 1.0 --notsay_score 0.5 --weighted_loss --nei_mer --use_sentiment --output_dir save/train_seed1 2>&1 | tee save/train_seed1.log
 """
 
 import argparse
@@ -39,6 +46,8 @@ def main():
     ap.add_argument("--test-targets", type=int, default=1000, help="test recommendations to keep (full: 4810)")
     ap.add_argument("--valid-targets", type=int, default=160, help="validation recommendations to keep (full: 3733)")
     ap.add_argument("--percent", type=float, help="keep this %% of the validation and test sets (overrides targets)")
+    ap.add_argument("--train-percent", type=float,
+                    help="keep this %% of the training set, for training runs (default: 32 rows, enough for --test)")
     ap.add_argument("--seed", type=int, default=0, help="which random sample")
     args = ap.parse_args()
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -57,7 +66,8 @@ def main():
     rng = random.Random(args.seed)
     budget = {"train": 32, "valid": args.valid_targets, "test": args.test_targets}
     for split in SPLITS:
-        lines, n = sample_split(split, budget[split], None if split == "train" else args.percent, rng)
+        percent = args.train_percent if split == "train" else args.percent
+        lines, n = sample_split(split, budget[split], percent, rng)
         with open(os.path.join(DST, f"{split}_data_processed.jsonl"), "w", encoding="utf-8") as f:
             f.writelines(lines)
         print(f"{split:<5} {len(lines):>5} dialogue turns, {n:>5} recommendations")
